@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EleCho.WpfSuite" Version="0.8.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="MyToolBar.Common">
+      <HintPath>MyToolBar.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="MyToolBar.Plugin">
+      <HintPath>MyToolBar.Plugin.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

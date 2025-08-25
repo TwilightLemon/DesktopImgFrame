@@ -1,0 +1,68 @@
+﻿<Window x:Class="DesktopImgFrame.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:api="clr-namespace:MyToolBar.Common.WinAPI;assembly=MyToolBar.Common"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:DesktopImgFrame"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ws="https://schemas.elecho.dev/wpfsuite"
+        Title="MainWindow"
+        Width="800"
+        Height="450"
+        ws:WindowOption.Corner="Round"
+        AllowDrop="True"
+        Background="Transparent"
+        Drop="Window_Drop"
+        MouseEnter="Window_MouseEnter"
+        MouseLeave="Window_MouseLeave"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        ShowInTaskbar="False"
+        WindowStyle="None"
+        mc:Ignorable="d">
+    <Window.Resources>
+        <WindowChrome x:Key="windowChrome" ResizeBorderThickness="8" />
+        <Style TargetType="ws:Button">
+            <Setter Property="Foreground" Value="WhiteSmoke" />
+            <Setter Property="Background" Value="#0E0E0E" />
+            <Setter Property="HoverBackground" Value="#0E0E0E" />
+            <Setter Property="PressedBackground" Value="#0E0E0E" />
+            <Setter Property="Width" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="FontFamily" Value="Segoe Fluent Icons" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+    </Window.Resources>
+    <api:WindowMaterial.Material>
+        <api:WindowMaterial x:Name="Material"
+                            CompositonColor="#3C000000"
+                            MaterialMode="Acrylic"
+                            UseWindowComposition="True"
+                            WindowChromeEx="{StaticResource windowChrome}" />
+    </api:WindowMaterial.Material>
+    <Grid>
+        <Image x:Name="Img"
+               RenderOptions.BitmapScalingMode="HighQuality"
+               Stretch="UniformToFill" />
+        <Grid x:Name="BtnGrid"
+              Height="60"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Bottom"
+              Background="Transparent"
+              MouseEnter="BtnGrid_MouseEnter"
+              MouseLeave="BtnGrid_MouseLeave">
+            <ws:Button Margin="0,0,68,0"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center"
+                       Click="NewFrameBtn_Click"
+                       Content="&#xe710;" />
+            <ws:Button Margin="0,0,20,0"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center"
+                       Click="CloseBtn_Click"
+                       Content="&#xe8bb;"
+                       FontSize="8" />
+        </Grid>
+    </Grid>
+</Window>
