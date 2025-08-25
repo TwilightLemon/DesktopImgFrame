@@ -29,6 +29,7 @@ namespace DesktopImgFrame
         private void MainWindow_SourceInitialized(object? sender, EventArgs e)
         {
             WindowLongAPI.SetToolWindow(this);
+           // DesktopWindowHelper.EmbedWindowToDesktop(this);
         }
 
         private void GlobalService_OnThemeColorChanged()
@@ -42,8 +43,6 @@ namespace DesktopImgFrame
             Config.WindowRect = new Rect(Left, Top, Width, Height);
         }
 
-
-        private int ImgIndex = 0;
         private void Init()
         {
             GlobalService_OnThemeColorChanged();
@@ -54,7 +53,10 @@ namespace DesktopImgFrame
                 Width = rect.Width;
                 Height = rect.Height;
             }
-            NextImage();
+            if (Config.ImgPaths.Count >Config.Index)
+            {
+                Img.Source = new BitmapImage(new Uri(Config.ImgPaths[Config.Index]));
+            }
         }
 
         private void Window_Drop(object sender, DragEventArgs e)
@@ -73,28 +75,26 @@ namespace DesktopImgFrame
             if (Config.RandomOrder)
             {
                 var r = new Random();
-                ImgIndex = r.Next(0, Config.ImgPaths.Count);
+                Config.Index = r.Next(0, Config.ImgPaths.Count);
             }
             else
             {
-                ImgIndex = (ImgIndex + 1) % Config.ImgPaths.Count;
+                Config.Index = (Config.Index + 1) % Config.ImgPaths.Count;
             }
             try
             {
-                var bitmap = new BitmapImage();
-                bitmap.BeginInit();
-                bitmap.UriSource = new Uri(Config.ImgPaths[ImgIndex]);
-                bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                bitmap.EndInit();
-                Img.Source = bitmap;
+                Img.Source = new BitmapImage(new Uri(Config.ImgPaths[Config.Index]));
             }
             catch { }
         }
 
         private void Window_MouseEnter(object sender, MouseEventArgs e)
         {
+            if (Config.Locked)
+            {
+                return;
+            }
             NextImage();
-
             var easing = new CubicEase();
             Img.BeginAnimation(OpacityProperty, new DoubleAnimation(1, TimeSpan.FromMilliseconds(400)));
             var blur = new BlurEffect() { Radius = 80 };
@@ -110,6 +110,10 @@ namespace DesktopImgFrame
 
         private void Window_MouseLeave(object sender, MouseEventArgs e)
         {
+            if (Config.Locked)
+            {
+                return;
+            }
             Img.BeginAnimation(OpacityProperty, new DoubleAnimation(0, TimeSpan.FromMilliseconds(300)));
             var blur = new BlurEffect() { Radius = 0 };
             Img.Effect = blur;
@@ -144,6 +148,10 @@ namespace DesktopImgFrame
         private void BtnGrid_MouseLeave(object sender, MouseEventArgs e)
         {
             BtnGrid.Opacity = 0;
+        }
+        private void LockBtn_Click(object sender, RoutedEventArgs e)
+        {
+            Config.Locked = !Config.Locked;
         }
     }
 }

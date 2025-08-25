@@ -63,6 +63,11 @@
                        Click="CloseBtn_Click"
                        Content="&#xe8bb;"
                        FontSize="8" />
+            <ws:Button Margin="20,0,0,0"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Center"
+                       Click="LockBtn_Click"
+                       Content="&#xe72e;" />
         </Grid>
     </Grid>
 </Window>
