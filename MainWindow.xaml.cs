@@ -29,10 +29,17 @@ namespace DesktopImgFrame
             SizeChanged += MainWindow_SizeChanged;
             Loaded += MainWindow_Loaded;
 
+            // Mouse events
             this.MouseWheel += MainWindow_MouseWheel;
             Img.MouseLeftButtonDown += Img_MouseLeftButtonDown;
             Img.MouseLeftButtonUp += Img_MouseLeftButtonUp;
             Img.MouseMove += Img_MouseMove;
+
+            // Touch and manipulation events
+            this.IsManipulationEnabled = true;
+            this.ManipulationStarted += MainWindow_ManipulationStarted;
+            this.ManipulationDelta += MainWindow_ManipulationDelta;
+            this.ManipulationCompleted += MainWindow_ManipulationCompleted;
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -73,6 +80,8 @@ namespace DesktopImgFrame
         }
 
         private Point? _lastDragPoint, _mouseDownPoint;
+        private bool _isManipulating = false;
+        private Point _manipulationStartCenter;
 
         private void MainWindow_SourceInitialized(object? sender, EventArgs e)
         {
@@ -203,27 +212,47 @@ namespace DesktopImgFrame
         #region Scale and Move
         private void MainWindow_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            var point = e.GetPosition(Img);
-            var scale = e.Delta > 0 ? 1.1 : 1 / 1.1;
+            ScaleImage(e.GetPosition(this), e.Delta > 0 ? 1.1 : 1 / 1.1);
+        }
 
-            // To scale around the mouse pointer, we need to adjust the translation.
-            // The formula is T_new = T_old * scale_factor + mouse_pos * (1 - scale_factor).
-            // This assumes the ScaleTransform's center is (0,0).
+        private void ScaleImage(Point centerPoint, double scaleFactor)
+        {
+            // Get current image position and scale
+            var currentLeft = Canvas.GetLeft(Img);
+            var currentTop = Canvas.GetTop(Img);
+            var currentScaleX = ImageScaleTransform.ScaleX;
+            var currentScaleY = ImageScaleTransform.ScaleY;
 
-            var oldTranslateX = Canvas.GetLeft(Img);
-            var oldTranslateY = Canvas.GetTop(Img);
+            // Calculate new scale values
+            var newScaleX = currentScaleX * scaleFactor;
+            var newScaleY = currentScaleY * scaleFactor;
 
-            var X = oldTranslateX * scale + point.X * (1 - scale);
-            var Y = oldTranslateY * scale + point.Y * (1 - scale);
-            Canvas.SetLeft(Img, X);
-            Canvas.SetTop(Img, Y);
+            // Prevent scaling too small or too large
+            if (newScaleX < 0.1 || newScaleX > 10 || newScaleY < 0.1 || newScaleY > 10)
+                return;
 
-            ImageScaleTransform.ScaleX *= scale;
-            ImageScaleTransform.ScaleY *= scale;
+            // Calculate the point relative to the image's current position
+            var imagePoint = new Point(centerPoint.X - currentLeft, centerPoint.Y - currentTop);
+
+            // Scale the relative point by the scale factor
+            var scaledImagePoint = new Point(imagePoint.X * scaleFactor, imagePoint.Y * scaleFactor);
+
+            // Calculate new position to keep the center point fixed
+            var newLeft = centerPoint.X - scaledImagePoint.X;
+            var newTop = centerPoint.Y - scaledImagePoint.Y;
+
+            // Apply the new transformation
+            Canvas.SetLeft(Img, newLeft);
+            Canvas.SetTop(Img, newTop);
+            ImageScaleTransform.ScaleX = newScaleX;
+            ImageScaleTransform.ScaleY = newScaleY;
         }
 
         private void Img_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            // Ignore mouse events when manipulating with touch
+            if (_isManipulating) return;
+
             if (e.ClickCount == 2)
             {
                 //reset
@@ -237,6 +266,9 @@ namespace DesktopImgFrame
 
         private void Img_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
+            // Ignore mouse events when manipulating with touch
+            if (_isManipulating) return;
+
             Img.ReleaseMouseCapture();
 
             if(_mouseDownPoint.HasValue && (e.GetPosition(this) == _mouseDownPoint.Value))
@@ -253,6 +285,9 @@ namespace DesktopImgFrame
 
         private void Img_MouseMove(object sender, MouseEventArgs e)
         {
+            // Ignore mouse events when manipulating with touch
+            if (_isManipulating) return;
+
             if (_lastDragPoint.HasValue)
             {
                 var currentPosition = e.GetPosition(this);
@@ -267,6 +302,46 @@ namespace DesktopImgFrame
                 Canvas.SetTop(Img, y);
             }
         }
+
+        #region Touch and Manipulation Events
+        private void MainWindow_ManipulationStarted(object? sender, ManipulationStartedEventArgs e)
+        {
+            _isManipulating = true;
+            _manipulationStartCenter = e.ManipulationOrigin;
+            e.Handled = true;
+        }
+
+        private void MainWindow_ManipulationDelta(object? sender, ManipulationDeltaEventArgs e)
+        {
+            if (!_isManipulating) return;
+
+            // Handle scaling (pinch-to-zoom)
+            if (e.DeltaManipulation.Scale.X != 1.0 || e.DeltaManipulation.Scale.Y != 1.0)
+            {
+                var scaleFactor = (e.DeltaManipulation.Scale.X + e.DeltaManipulation.Scale.Y) / 2.0;
+                var centerPoint = e.ManipulationOrigin;
+                ScaleImage(centerPoint, scaleFactor);
+            }
+
+            // Handle translation (pan/drag)
+            if (e.DeltaManipulation.Translation.X != 0 || e.DeltaManipulation.Translation.Y != 0)
+            {
+                var currentLeft = Canvas.GetLeft(Img);
+                var currentTop = Canvas.GetTop(Img);
+                
+                Canvas.SetLeft(Img, currentLeft + e.DeltaManipulation.Translation.X);
+                Canvas.SetTop(Img, currentTop + e.DeltaManipulation.Translation.Y);
+            }
+
+            e.Handled = true;
+        }
+
+        private void MainWindow_ManipulationCompleted(object? sender, ManipulationCompletedEventArgs e)
+        {
+            _isManipulating = false;
+            e.Handled = true;
+        }
+        #endregion
         #endregion
     }
 }
