@@ -137,7 +137,7 @@ namespace DesktopImgFrame
 
         private void CloseBtn_Click(object sender, RoutedEventArgs e)
         {
-            Close();
+            FrameService.ServiceInstance?.RemoveFrame(this);
         }
 
         private void BtnGrid_MouseEnter(object sender, MouseEventArgs e)

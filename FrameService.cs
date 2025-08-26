@@ -13,7 +13,8 @@ public class FrameService : ServiceBase
     private readonly List<MainWindow> mainWindows = [];
     public bool IsRunning
     {
-        get => _isRunning; private set
+        get => _isRunning;
+        private set
         {
             if (_isRunning != value)
             {
