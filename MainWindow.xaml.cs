@@ -2,6 +2,8 @@
 using MyToolBar.Common.WinAPI;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -24,6 +26,8 @@ namespace DesktopImgFrame
             SourceInitialized += MainWindow_SourceInitialized;
             GlobalService.OnThemeColorChanged += GlobalService_OnThemeColorChanged;
             Closing += MainWindow_Closing;
+            SizeChanged += MainWindow_SizeChanged;
+            Loaded += MainWindow_Loaded;
 
             this.MouseWheel += MainWindow_MouseWheel;
             Img.MouseLeftButtonDown += Img_MouseLeftButtonDown;
@@ -31,7 +35,44 @@ namespace DesktopImgFrame
             Img.MouseMove += Img_MouseMove;
         }
 
-        private Point? _lastDragPoint,_mouseDownPoint;
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            ResetImageSize();
+        }
+
+        private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            ResetImageSize();
+        }
+
+        private void ResetImageSize()
+        {
+            if (Img.Source is BitmapSource { PixelWidth: var w, PixelHeight: var h })
+            {
+                ImageScaleTransform.ScaleX = 1;
+                ImageScaleTransform.ScaleY = 1;
+                Canvas.SetLeft(Img, 0);
+                Canvas.SetTop(Img, 0);
+
+                double ratio = (double)w / h;
+                //先尝试固定高度，计算宽度
+                Img.Height = ActualHeight;
+                var width = ActualHeight * ratio;
+                if (width >= ActualWidth)
+                {
+                    Img.Width = width;
+                }
+                else 
+                {
+                    //宽度不够，固定宽度，计算高度
+                    Img.Width = ActualWidth;
+                    var height = ActualWidth / ratio;
+                    Img.Height = height;
+                }
+            }
+        }
+
+        private Point? _lastDragPoint, _mouseDownPoint;
 
         private void MainWindow_SourceInitialized(object? sender, EventArgs e)
         {
@@ -91,6 +132,7 @@ namespace DesktopImgFrame
             try
             {
                 Img.Source = new BitmapImage(new Uri(Config.ImgPaths[Config.Index]));
+                ResetImageSize();
             }
             catch { }
         }
@@ -168,11 +210,13 @@ namespace DesktopImgFrame
             // The formula is T_new = T_old * scale_factor + mouse_pos * (1 - scale_factor).
             // This assumes the ScaleTransform's center is (0,0).
 
-            var oldTranslateX = ImageTranslateTransform.X;
-            var oldTranslateY = ImageTranslateTransform.Y;
+            var oldTranslateX = Canvas.GetLeft(Img);
+            var oldTranslateY = Canvas.GetTop(Img);
 
-            ImageTranslateTransform.X = oldTranslateX * scale + point.X * (1 - scale);
-            ImageTranslateTransform.Y = oldTranslateY * scale + point.Y * (1 - scale);
+            var X = oldTranslateX * scale + point.X * (1 - scale);
+            var Y = oldTranslateY * scale + point.Y * (1 - scale);
+            Canvas.SetLeft(Img, X);
+            Canvas.SetTop(Img, Y);
 
             ImageScaleTransform.ScaleX *= scale;
             ImageScaleTransform.ScaleY *= scale;
@@ -183,10 +227,7 @@ namespace DesktopImgFrame
             if (e.ClickCount == 2)
             {
                 //reset
-                ImageScaleTransform.ScaleX = 1;
-                ImageScaleTransform.ScaleY = 1;
-                ImageTranslateTransform.X = 0;
-                ImageTranslateTransform.Y = 0;
+                ResetImageSize();
                 _mouseDownPoint = null;
                 return;
             }
@@ -218,8 +259,12 @@ namespace DesktopImgFrame
                 var offset = currentPosition - _lastDragPoint.Value;
                 _lastDragPoint = currentPosition;
 
-                ImageTranslateTransform.X += offset.X;
-                ImageTranslateTransform.Y += offset.Y;
+                var x= Canvas.GetLeft(Img);
+                x += offset.X;
+                Canvas.SetLeft(Img, x);
+                var y = Canvas.GetTop(Img);
+                y+= offset.Y;
+                Canvas.SetTop(Img, y);
             }
         }
         #endregion

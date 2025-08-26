@@ -41,16 +41,17 @@
                             WindowChromeEx="{StaticResource windowChrome}" />
     </api:WindowMaterial.Material>
     <Grid>
-        <Image x:Name="Img"
-               RenderOptions.BitmapScalingMode="HighQuality"
-               Stretch="UniformToFill">
-            <Image.RenderTransform>
-                <TransformGroup>
-                    <ScaleTransform x:Name="ImageScaleTransform" CenterX="0.5" CenterY="0.5" />
-                    <TranslateTransform x:Name="ImageTranslateTransform" />
-                </TransformGroup>
-            </Image.RenderTransform>
-        </Image>
+        <Canvas>
+            <Image x:Name="Img"
+                   RenderOptions.BitmapScalingMode="HighQuality"
+                   Stretch="Fill">
+                <Image.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform x:Name="ImageScaleTransform" CenterX="0.5" CenterY="0.5" />
+                    </TransformGroup>
+                </Image.RenderTransform>
+            </Image>
+        </Canvas>
         <Grid x:Name="BtnGrid"
               Height="60"
               HorizontalAlignment="Stretch"
