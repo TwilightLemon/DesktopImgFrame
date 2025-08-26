@@ -24,7 +24,14 @@ namespace DesktopImgFrame
             SourceInitialized += MainWindow_SourceInitialized;
             GlobalService.OnThemeColorChanged += GlobalService_OnThemeColorChanged;
             Closing += MainWindow_Closing;
+
+            this.MouseWheel += MainWindow_MouseWheel;
+            Img.MouseLeftButtonDown += Img_MouseLeftButtonDown;
+            Img.MouseLeftButtonUp += Img_MouseLeftButtonUp;
+            Img.MouseMove += Img_MouseMove;
         }
+
+        private Point? _lastDragPoint,_mouseDownPoint;
 
         private void MainWindow_SourceInitialized(object? sender, EventArgs e)
         {
@@ -125,11 +132,7 @@ namespace DesktopImgFrame
             blur.BeginAnimation(BlurEffect.RadiusProperty, da);
         }
 
-        private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            NextImage();
-        }
-
+        #region Buttons
         private void NewFrameBtn_Click(object sender, RoutedEventArgs e)
         {
             FrameService.ServiceInstance?.CreateNewFrame();
@@ -153,5 +156,72 @@ namespace DesktopImgFrame
         {
             Config.Locked = !Config.Locked;
         }
+        #endregion
+
+        #region Scale and Move
+        private void MainWindow_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            var point = e.GetPosition(Img);
+            var scale = e.Delta > 0 ? 1.1 : 1 / 1.1;
+
+            // To scale around the mouse pointer, we need to adjust the translation.
+            // The formula is T_new = T_old * scale_factor + mouse_pos * (1 - scale_factor).
+            // This assumes the ScaleTransform's center is (0,0).
+
+            var oldTranslateX = ImageTranslateTransform.X;
+            var oldTranslateY = ImageTranslateTransform.Y;
+
+            ImageTranslateTransform.X = oldTranslateX * scale + point.X * (1 - scale);
+            ImageTranslateTransform.Y = oldTranslateY * scale + point.Y * (1 - scale);
+
+            ImageScaleTransform.ScaleX *= scale;
+            ImageScaleTransform.ScaleY *= scale;
+        }
+
+        private void Img_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+            {
+                //reset
+                ImageScaleTransform.ScaleX = 1;
+                ImageScaleTransform.ScaleY = 1;
+                ImageTranslateTransform.X = 0;
+                ImageTranslateTransform.Y = 0;
+                _mouseDownPoint = null;
+                return;
+            }
+            _mouseDownPoint = _lastDragPoint = e.GetPosition(this);
+            Img.CaptureMouse();
+        }
+
+        private void Img_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            Img.ReleaseMouseCapture();
+
+            if(_mouseDownPoint.HasValue && (e.GetPosition(this) == _mouseDownPoint.Value))
+            {
+                // click without move
+                if (!Config.Locked)
+                {
+                    NextImage();
+                }
+            }
+            _mouseDownPoint = null;
+            _lastDragPoint = null;
+        }
+
+        private void Img_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (_lastDragPoint.HasValue)
+            {
+                var currentPosition = e.GetPosition(this);
+                var offset = currentPosition - _lastDragPoint.Value;
+                _lastDragPoint = currentPosition;
+
+                ImageTranslateTransform.X += offset.X;
+                ImageTranslateTransform.Y += offset.Y;
+            }
+        }
+        #endregion
     }
 }

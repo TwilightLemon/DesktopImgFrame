@@ -15,7 +15,6 @@
         Drop="Window_Drop"
         MouseEnter="Window_MouseEnter"
         MouseLeave="Window_MouseLeave"
-        MouseLeftButtonDown="Window_MouseLeftButtonDown"
         ShowInTaskbar="False"
         WindowStyle="None"
         mc:Ignorable="d">
@@ -44,14 +43,23 @@
     <Grid>
         <Image x:Name="Img"
                RenderOptions.BitmapScalingMode="HighQuality"
-               Stretch="UniformToFill" />
+               Stretch="UniformToFill">
+            <Image.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform x:Name="ImageScaleTransform" CenterX="0.5" CenterY="0.5" />
+                    <TranslateTransform x:Name="ImageTranslateTransform" />
+                </TransformGroup>
+            </Image.RenderTransform>
+        </Image>
         <Grid x:Name="BtnGrid"
               Height="60"
               HorizontalAlignment="Stretch"
               VerticalAlignment="Bottom"
+              d:Opacity="1"
               Background="Transparent"
               MouseEnter="BtnGrid_MouseEnter"
-              MouseLeave="BtnGrid_MouseLeave">
+              MouseLeave="BtnGrid_MouseLeave"
+              Opacity="0">
             <ws:Button Margin="0,0,68,0"
                        HorizontalAlignment="Right"
                        VerticalAlignment="Center"
