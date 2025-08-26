@@ -1,9 +1,12 @@
 # Desktop Image Frame
 A MyToolBar extension for displaying images on the desktop.
 
+![screenshot](https://raw.githubusercontent.com/TwilightLemon/Data/refs/heads/master/DesktopImgFrame.jpg)
+
 ## Features
 
 - Display a slideshow of images on the desktop in SILENCE.
+- Support arbitrary zoom and pan.
 - More...
 
 ## Install
